@@ -89,6 +89,7 @@ KEY_ACTIONS = "actions"
 KEY_FORMS = "forms"
 KEY_E2E_ACTIONS = "e2e_actions"
 KEY_RESPONSES_TEXT = "text"
+KEY_LOOPS = "loops"
 
 ALL_DOMAIN_KEYS = [
     KEY_SLOTS,
@@ -97,6 +98,7 @@ ALL_DOMAIN_KEYS = [
     KEY_ENTITIES,
     KEY_INTENTS,
     KEY_RESPONSES,
+    KEY_LOOPS,
     KEY_E2E_ACTIONS,
     SESSION_CONFIG_KEY,
 ]
@@ -267,6 +269,7 @@ class Domain:
             responses=responses,
             action_names=actions,
             forms=data.get(KEY_FORMS, {}),
+            loops=data.get(KEY_LOOPS, {}),
             data=Domain._cleaned_data(data),
             action_texts=data.get(KEY_E2E_ACTIONS, []),
             session_config=session_config,
@@ -363,6 +366,11 @@ class Domain:
             if form in domain_dict.get(KEY_ACTIONS, []):
                 domain_dict[KEY_ACTIONS].remove(form)
 
+        # remove existing loop actions from new actions
+        for loop in combined.get(KEY_LOOPS, []):
+            if loop in domain_dict.get(KEY_ACTIONS, []):
+                domain_dict[KEY_ACTIONS].remove(loop)
+
         duplicates: Dict[Text, List[Text]] = {}
 
         merge_func_mappings: Dict[Text, Callable[..., Any]] = {
@@ -373,6 +381,7 @@ class Domain:
             KEY_FORMS: rasa.shared.utils.common.merge_dicts,
             KEY_RESPONSES: rasa.shared.utils.common.merge_dicts,
             KEY_SLOTS: rasa.shared.utils.common.merge_dicts,
+            KEY_LOOPS: rasa.shared.utils.common.merge_dicts
         }
 
         for key, merge_func in merge_func_mappings.items():
@@ -732,6 +741,7 @@ class Domain:
         responses: Dict[Text, List[Dict[Text, Any]]],
         action_names: List[Text],
         forms: Union[Dict[Text, Any], List[Text]],
+        loops: Union[Dict[Text, Any], List[Text]],
         data: Dict,
         action_texts: Optional[List[Text]] = None,
         store_entities_as_slots: bool = True,
@@ -766,6 +776,10 @@ class Domain:
         self.form_names, self.forms, overridden_form_actions = self._initialize_forms(
             forms
         )
+
+        self.loop_names, self.loops = self._initialize_loops(loops)
+        action_names += overridden_form_actions
+
         action_names += overridden_form_actions
 
         self.responses = responses
@@ -874,6 +888,20 @@ class Domain:
             if form_data is not None and REQUIRED_SLOTS_KEY not in form_data:
                 forms[form_name] = {REQUIRED_SLOTS_KEY: form_data}
         return list(forms.keys()), forms, []
+
+    @staticmethod
+    def _initialize_loops(
+            loops: Dict[Text, Any]
+    ) -> Tuple[List[Text], Dict[Text, Any]]:
+        """Retrieves the initial values for the Domain's loops fields.
+
+        Args:
+            loops: Parsed content of the `loops` section in the domain.
+
+        Returns:
+            The loop names, a mapping of loop names and section
+        """
+        return list(loops.keys()), loops
 
     def __hash__(self) -> int:
         """Returns a unique hash for the domain."""
@@ -1882,7 +1910,8 @@ class Domain:
             f"{self.__class__.__name__}: {len(self.action_names_or_texts)} actions, "
             f"{len(self.intent_properties)} intents, {len(self.responses)} responses, "
             f"{len(self.slots)} slots, "
-            f"{len(self.entities)} entities, {len(self.form_names)} forms"
+            f"{len(self.entities)} entities, {len(self.form_names)} forms, "
+            f"{len(self.loop_names)} loops"
         )
 
     @staticmethod

@@ -138,6 +138,7 @@ class RulePolicy(MemoizationPolicy):
             # the policy will use the confidence of NLU on the latest
             # user message to set the confidence of the action
             "use_nlu_confidence_as_score": False,
+            POLICY_MAX_HISTORY: 5
         }
 
     def __init__(
@@ -150,9 +151,6 @@ class RulePolicy(MemoizationPolicy):
         lookup: Optional[Dict] = None,
     ) -> None:
         """Initializes the policy."""
-        # max history is set to `None` in order to capture any lengths of rule stories
-        config[POLICY_MAX_HISTORY] = None
-
         super().__init__(
             config, model_storage, resource, execution_context, featurizer, lookup
         )
