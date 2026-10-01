@@ -1,7 +1,11 @@
+import os
+
+# Match rasa/__init__.py: select Keras 2 before any test imports TensorFlow.
+os.environ.setdefault("TF_USE_LEGACY_KERAS", "1")
+
 import asyncio
 import contextlib
 import copy
-import os
 import random
 import re
 import textwrap

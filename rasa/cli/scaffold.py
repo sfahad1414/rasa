@@ -1,5 +1,6 @@
 import argparse
 import os
+import shutil
 import sys
 from typing import List, Text
 
@@ -134,9 +135,7 @@ def init_project(args: argparse.Namespace, path: Text) -> None:
 
 def create_initial_project(path: Text) -> None:
     """Creates directory structure and templates for initial project."""
-    from distutils.dir_util import copy_tree
-
-    copy_tree(scaffold_path(), path)
+    shutil.copytree(scaffold_path(), path, dirs_exist_ok=True)
 
 
 def scaffold_path() -> Text:
