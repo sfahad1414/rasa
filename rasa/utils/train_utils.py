@@ -28,8 +28,6 @@ from rasa.utils.tensorflow.constants import (
     TOLERANCE,
     CHECKPOINT_MODEL,
 )
-from rasa.utils.tensorflow.callback import RasaTrainingLogger, RasaModelCheckpoint
-from rasa.utils.tensorflow.data_generator import RasaBatchDataGenerator
 from rasa.utils.tensorflow.model_data import RasaModelData
 from rasa.shared.nlu.constants import SPLIT_ENTITIES_BY_COMMA
 from rasa.shared.exceptions import InvalidConfigException
@@ -302,8 +300,11 @@ def create_data_generators(
     eval_num_examples: int = 0,
     random_seed: Optional[int] = None,
     shuffle: bool = True,
-) -> Tuple[RasaBatchDataGenerator, Optional[RasaBatchDataGenerator]]:
+) -> Tuple["RasaBatchDataGenerator", Optional["RasaBatchDataGenerator"]]:
     """Create data generators for train and optional validation data.
+
+    ``RasaBatchDataGenerator`` is imported inside this function because importing it
+    loads TensorFlow. Callers such as ``Agent`` must be importable without that.
 
     Args:
         model_data: The model data to use.
@@ -317,6 +318,8 @@ def create_data_generators(
     Returns:
         The training data generator and optional validation data generator.
     """
+    from rasa.utils.tensorflow.data_generator import RasaBatchDataGenerator
+
     validation_data_generator = None
     if eval_num_examples > 0:
         model_data, evaluation_model_data = model_data.split(
@@ -364,7 +367,9 @@ def create_common_callbacks(
     Returns:
         A list of callbacks.
     """
+    # Imported here so `import rasa.utils.train_utils` does not load TensorFlow.
     import tensorflow as tf
+    from rasa.utils.tensorflow.callback import RasaModelCheckpoint, RasaTrainingLogger
 
     callbacks = [RasaTrainingLogger(epochs, silent=False)]
 

@@ -89,3 +89,5 @@ rasa/keys
 # Local Netlify folder
 .netlify
 rasa.code-workspace
+# Added by code-review-graph
+.code-review-graph/

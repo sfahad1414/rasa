@@ -27,7 +27,6 @@ from rasa.shared.nlu.constants import (
     SPLIT_ENTITIES_BY_COMMA,
     SINGLE_ENTITY_ALLOWED_INTERLEAVING_CHARSET,
 )
-import rasa.utils.train_utils
 
 
 class EntityTagSpec(NamedTuple):

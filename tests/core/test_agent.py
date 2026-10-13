@@ -2,6 +2,8 @@ import asyncio
 from http import HTTPStatus
 import json
 from pathlib import Path
+import subprocess
+import sys
 from typing import Any, Dict, Text, Callable, Optional
 from unittest.mock import patch
 import uuid
@@ -388,3 +390,25 @@ def test_agent_checks_if_ready(method_name):
     not_ready_agent = Agent()
     with pytest.raises(AgentNotReady):
         getattr(not_ready_agent, method_name)()
+
+
+def test_importing_agent_does_not_import_tensorflow():
+    """Importing Agent must not load TensorFlow.
+
+    TensorFlow is imported later, when ``Agent.load`` imports the model's
+    graph components.
+    """
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import sys\n"
+            "from rasa.core.agent import Agent\n"
+            "assert 'tensorflow' not in sys.modules\n"
+            "assert callable(Agent.load)\n",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
