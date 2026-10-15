@@ -382,10 +382,13 @@ timeout_func_only = true
 asyncio_mode = "auto"
 
 [tool.setuptools]
-packages = [
-    "rasa",
-]
 include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["rasa*"]
+
+[tool.setuptools.package-data]
+"*" = ["**/*.yml", "**/*.yaml", "**/*.html"]
 
 [tool.uv]
 # aiogram 2.25 pins aiohttp<3.9, which has no Python 3.12 wheels. The 2.25
