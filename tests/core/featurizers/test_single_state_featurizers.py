@@ -92,6 +92,7 @@ def test_prepare_for_training():
         slots=[TextSlot("name", mappings=[{}])],
         responses={},
         forms={},
+        loops={},
         action_names=["utter_greet", "action_check_weather"],
         data={},
     )
@@ -125,6 +126,7 @@ def test_encode_all_labels__encoded_all_action_names_and_texts():
         slots=[],
         responses={},
         forms={},
+        loops={},
         action_names=["a", "b", "c", "d"],
         data={},
     )
@@ -453,6 +455,7 @@ def test_encode_entities__with_entity_roles_and_groups():
         slots=[],
         responses={},
         forms={},
+        loops={},
         action_names=[],
         data={},
     )
@@ -486,6 +489,7 @@ def test_encode_entities__with_bilou_entity_roles_and_groups():
         slots=[],
         responses={},
         forms={},
+        loops={},
         action_names=[],
         data={},
     )

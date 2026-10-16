@@ -960,7 +960,24 @@ def is_postgresql_url(url: Union[Text, "URL"]) -> bool:
     if isinstance(url, str):
         return "postgresql" in url
 
-    return url.drivername == "postgresql"
+    return url.get_backend_name() == "postgresql"
+
+
+def _with_psycopg2_driver(url: Union[Text, "URL"]) -> Union[Text, "URL"]:
+    """Use the psycopg2 driver shipped with Rasa.
+
+    SQLAlchemy 2.1 imports psycopg (v3) for a bare ``postgresql`` URL.
+    """
+    if isinstance(url, str):
+        prefix = "postgresql://"
+        if url.startswith(prefix):
+            return "postgresql+psycopg2://" + url[len(prefix) :]
+        return url
+
+    if url.drivername == "postgresql":
+        return url.set(drivername="postgresql+psycopg2")
+
+    return url
 
 
 def create_engine_kwargs(url: Union[Text, "URL"]) -> Dict[Text, Any]:
@@ -1015,7 +1032,7 @@ def ensure_schema_exists(session: "Session") -> None:
 
     if is_postgresql_url(engine.url):
         query = sa.exists(
-            sa.select([(sa.text("schema_name"))])
+            sa.select(sa.text("schema_name"))
             .select_from(sa.text("information_schema.schemata"))
             .where(sa.text(f"schema_name = '{schema_name}'"))
         )
@@ -1080,7 +1097,9 @@ class SQLTrackerStore(TrackerStore, SerializedTrackerAsText):
             dialect, host, port, db, username, password, login_db, query
         )
 
-        self.engine = sa.create_engine(engine_url, **create_engine_kwargs(engine_url))
+        self.engine = sa.create_engine(
+            _with_psycopg2_driver(engine_url), **create_engine_kwargs(engine_url)
+        )
 
         logger.debug(f"Attempting to connect to database via '{self.engine.url!r}'.")
 
@@ -1161,7 +1180,9 @@ class SQLTrackerStore(TrackerStore, SerializedTrackerAsText):
             port = parsed.port or port
             host = parsed.hostname or host
 
-        return sa.engine.url.URL(
+        # URL.create() is the public constructor. Calling URL() directly leaves
+        # query as None on SQLAlchemy 2.1, and create_engine then crashes.
+        return sa.engine.url.URL.create(
             dialect,
             username,
             password,
@@ -1183,7 +1204,7 @@ class SQLTrackerStore(TrackerStore, SerializedTrackerAsText):
 
         self._create_database(self.engine, db)
         self.engine.dispose()
-        engine_url = sa.engine.url.URL(
+        engine_url = sa.engine.url.URL.create(
             drivername=engine_url.drivername,
             username=engine_url.username,
             password=engine_url.password,
@@ -1192,7 +1213,7 @@ class SQLTrackerStore(TrackerStore, SerializedTrackerAsText):
             database=db,
             query=engine_url.query,
         )
-        self.engine = create_engine(engine_url)
+        self.engine = create_engine(_with_psycopg2_driver(engine_url))
 
     @staticmethod
     def _create_database(engine: "Engine", database_name: Text) -> None:

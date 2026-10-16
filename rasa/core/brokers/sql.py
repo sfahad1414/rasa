@@ -42,7 +42,7 @@ class SQLEventBroker(EventBroker):
         password: Optional[Text] = None,
     ) -> None:
         """Initializes `SQLBrokerEvent`."""
-        from rasa.core.tracker_store import SQLTrackerStore
+        from rasa.core.tracker_store import SQLTrackerStore, _with_psycopg2_driver
         import sqlalchemy.orm
 
         engine_url = SQLTrackerStore.get_db_url(
@@ -51,7 +51,7 @@ class SQLEventBroker(EventBroker):
 
         logger.debug(f"SQLEventBroker: Connecting to database: '{engine_url}'.")
 
-        self.engine = sqlalchemy.create_engine(engine_url)
+        self.engine = sqlalchemy.create_engine(_with_psycopg2_driver(engine_url))
         self.Base.metadata.create_all(self.engine)
         self.sessionmaker = sqlalchemy.orm.sessionmaker(bind=self.engine)
 

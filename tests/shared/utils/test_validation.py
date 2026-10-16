@@ -1,3 +1,4 @@
+import warnings
 from typing import Text
 from threading import Thread
 
@@ -316,7 +317,8 @@ async def test_compatible_training_data_format_version():
     }
 
     for version in [compatible_version_1, compatible_version_2]:
-        with pytest.warns(None):
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
             assert validation_utils.validate_training_data_format_version(version, "")
 
 

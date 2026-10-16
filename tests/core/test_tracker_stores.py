@@ -14,7 +14,7 @@ import uuid
 from _pytest.capture import CaptureFixture
 from _pytest.logging import LogCaptureFixture
 from _pytest.monkeypatch import MonkeyPatch
-from moto import mock_dynamodb
+from moto import mock_aws
 from pymongo.errors import OperationFailure
 
 from rasa.core.agent import Agent
@@ -84,30 +84,30 @@ def test_get_or_create():
 
 
 # noinspection PyPep8Naming
-@mock_dynamodb
+@mock_aws
 def test_dynamo_get_or_create():
     get_or_create_tracker_store(DynamoTrackerStore(test_domain))
 
 
-@mock_dynamodb
 async def test_dynamo_tracker_floats():
-    conversation_id = uuid.uuid4().hex
+    with mock_aws():
+        conversation_id = uuid.uuid4().hex
 
-    tracker_store = DynamoTrackerStore(test_domain)
-    tracker = await tracker_store.get_or_create_tracker(
-        conversation_id, append_action_listen=False
-    )
+        tracker_store = DynamoTrackerStore(test_domain)
+        tracker = await tracker_store.get_or_create_tracker(
+            conversation_id, append_action_listen=False
+        )
 
-    # save `slot` event with known `float`-type timestamp
-    timestamp = 13423.23434623
-    tracker.update(SlotSet("key", "val", timestamp=timestamp))
-    await tracker_store.save(tracker)
+        # save `slot` event with known `float`-type timestamp
+        timestamp = 13423.23434623
+        tracker.update(SlotSet("key", "val", timestamp=timestamp))
+        await tracker_store.save(tracker)
 
-    # retrieve tracker and the event timestamp is retrieved as a `float`
-    tracker = await tracker_store.get_or_create_tracker(conversation_id)
-    retrieved_timestamp = tracker.events[0].timestamp
-    assert isinstance(retrieved_timestamp, float)
-    assert retrieved_timestamp == timestamp
+        # retrieve tracker and the event timestamp is retrieved as a `float`
+        tracker = await tracker_store.get_or_create_tracker(conversation_id)
+        retrieved_timestamp = tracker.events[0].timestamp
+        assert isinstance(retrieved_timestamp, float)
+        assert retrieved_timestamp == timestamp
 
 
 async def test_restart_after_retrieval_from_tracker_store(domain: Domain):
@@ -411,7 +411,9 @@ def test_sql_tracker_store_logs_do_not_show_password(caplog: LogCaptureFixture):
     assert password not in caplog.text
 
     # instead the password is displayed as '***'
-    assert f"postgresql://{username}:***@{host}:{port}/{db}" in caplog.text
+    assert (
+        f"postgresql+psycopg2://{username}:***@{host}:{port}/{db}" in caplog.text
+    )
 
 
 def test_db_url_with_query_from_endpoint_config(tmp_path: Path):
@@ -435,10 +437,11 @@ def test_db_url_with_query_from_endpoint_config(tmp_path: Path):
 
     import itertools
 
-    # order of query dictionary in yaml is random, test against both permutations
+    # str(URL) hides the password. Query key order is not stable.
     connection_url = "postgresql://user:pw@:5123/login-db?"
+    rendered = url.render_as_string(hide_password=False)
     assert any(
-        str(url) == connection_url + "&".join(permutation)
+        rendered == connection_url + "&".join(permutation)
         for permutation in (
             itertools.permutations(("another=query", "driver=my-driver"))
         )
@@ -743,8 +746,8 @@ def test_session_scope_error(
     [
         (f"{PGDialect.name}://admin:pw@localhost:5432/rasa", True),
         (f"{SQLiteDialect.name}:///", False),
-        (URL(PGDialect.name), True),
-        (URL(SQLiteDialect.name), False),
+        (URL.create(PGDialect.name), True),
+        (URL.create(SQLiteDialect.name), False),
     ],
 )
 def test_is_postgres_url(url: Union[Text, URL], is_postgres_url: bool):

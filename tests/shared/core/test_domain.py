@@ -1011,6 +1011,7 @@ def test_check_domain_sanity_on_invalid_domain():
             responses={},
             action_names=["random_name", "random_name"],
             forms={},
+            loops={},
             data={},
         )
 
@@ -1025,6 +1026,7 @@ def test_check_domain_sanity_on_invalid_domain():
             responses={},
             action_names=[],
             forms={},
+            loops={},
             data={},
         )
 
@@ -1036,6 +1038,7 @@ def test_check_domain_sanity_on_invalid_domain():
             responses={},
             action_names=[],
             forms={},
+            loops={},
             data={},
         )
 
@@ -1243,7 +1246,7 @@ def test_session_config(
 
 def test_domain_as_dict_with_session_config():
     session_config = SessionConfig(123, False)
-    domain = Domain([], [], [], {}, [], {}, {}, None, True, session_config)
+    domain = Domain([], [], [], {}, [], {}, {}, {}, None, True, session_config)
 
     serialized = domain.as_dict()
     deserialized = Domain.from_dict(serialized)

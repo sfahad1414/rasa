@@ -96,9 +96,11 @@ class YamlValidationException(YamlException, ValueError):
         if not current:
             return None
 
-        this_line = current.lc.line + 1 if hasattr(current, "lc") else None
+        # ruamel can attach an lc object whose line is None (for example a tag).
+        line = getattr(getattr(current, "lc", None), "line", None)
+        this_line = line + 1 if isinstance(line, int) else None
 
-        if not path:
+        if not isinstance(path, str) or not path:
             return this_line
 
         if "/" in path:
@@ -130,7 +132,6 @@ def validate_yaml_schema(
     from pykwalify.core import Core
     from pykwalify.errors import SchemaError
     from ruamel.yaml import YAMLError
-    import pkg_resources
     import logging
 
     log = logging.getLogger("pykwalify")
@@ -148,11 +149,11 @@ def validate_yaml_schema(
     except (YAMLError, DuplicateKeyError) as e:
         raise YamlSyntaxException(underlying_yaml_exception=e)
 
-    schema_file = pkg_resources.resource_filename(package_name, schema_path)
-    schema_utils_file = pkg_resources.resource_filename(
+    schema_file = rasa.shared.utils.io.package_resource_path(package_name, schema_path)
+    schema_utils_file = rasa.shared.utils.io.package_resource_path(
         PACKAGE_NAME, RESPONSES_SCHEMA_FILE
     )
-    schema_extensions = pkg_resources.resource_filename(
+    schema_extensions = rasa.shared.utils.io.package_resource_path(
         PACKAGE_NAME, SCHEMA_EXTENSIONS_FILE
     )
 
@@ -264,7 +265,7 @@ def validate_training_data_format_version(
 
             return True
 
-    except TypeError:
+    except (TypeError, version.InvalidVersion):
         rasa.shared.utils.io.raise_warning(
             f"Training data file {filename} must specify "
             f"'{KEY_TRAINING_DATA_FORMAT_VERSION}' as string, for example:\n"

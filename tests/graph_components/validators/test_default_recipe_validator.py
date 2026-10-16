@@ -108,11 +108,13 @@ def _test_validation_warnings_with_default_configs(
     )
     validator = DefaultV1RecipeValidator(graph_schema)
     if not warnings:
-        with pytest.warns(None) as records:
+        with warnings.catch_warnings(record=True) as records:
+            warnings.simplefilter("always")
             validator.validate(dummy_importer)
             assert len(records) == 0, [warning.message for warning in records.list]
     else:
-        with pytest.warns(None) as records:
+        with warnings.catch_warnings(record=True) as records:
+            warnings.simplefilter("always")
             validator.validate(dummy_importer)
         assert len(records) == len(warnings), ", ".join(
             warning.message.args[0] for warning in records
@@ -394,7 +396,8 @@ def test_nlu_warn_if_lookup_table_and_crf_extractor_pattern_feature_mismatch(
         with pytest.warns(UserWarning, match=match):
             validator.validate(importer)
     else:
-        with pytest.warns(None) as records:
+        with warnings.catch_warnings(record=True) as records:
+            warnings.simplefilter("always")
             validator.validate(importer)
             assert len(records) == 0
 
@@ -434,7 +437,8 @@ def test_nlu_warn_if_entity_synonyms_unused(
         with pytest.warns(UserWarning, match=match):
             validator.validate(importer)
     else:
-        with pytest.warns(None) as records:
+        with warnings.catch_warnings(record=True) as records:
+            warnings.simplefilter("always")
             validator.validate(importer)
             assert len(records) == 0
 
@@ -521,7 +525,8 @@ def test_nlu_warn_of_competing_extractors(
         with pytest.warns(UserWarning, match=".*defined multiple entity extractors"):
             nlu_validator.validate(importer)
     else:
-        with pytest.warns(None) as records:
+        with warnings.catch_warnings(record=True) as records:
+            warnings.simplefilter("always")
             nlu_validator.validate(importer)
         assert len(records) == 0
 
@@ -785,7 +790,8 @@ def test_core_warn_if_no_rule_policy(
         ) as records:
             validator.validate(importer)
     else:
-        with pytest.warns(None) as records:
+        with warnings.catch_warnings(record=True) as records:
+            warnings.simplefilter("always")
             validator.validate(importer)
         assert len(records) == 0
 
@@ -922,7 +928,8 @@ def test_core_warn_if_policy_priorities_are_not_unique(
         with pytest.warns(UserWarning, match=expected_message):
             validator.validate(importer)
     else:
-        with pytest.warns(None) as records:
+        with warnings.catch_warnings(record=True) as records:
+            warnings.simplefilter("always")
             validator.validate(importer)
         assert len(records) == 0
 

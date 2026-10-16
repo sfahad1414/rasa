@@ -219,5 +219,9 @@ def sparse_matrix_to_string(m: scipy.sparse.spmatrix) -> Text:
     """
     # make sure sparse matrix is in COOrdinate format
     m_coo = m.tocoo()
-    triples = zip(list(zip(m_coo.row, m_coo.col)), m_coo.data)
+    # NumPy 2 prints scalar integers as np.int32(...). Cast to Python ints.
+    triples = zip(
+        ((int(row), int(col)) for row, col in zip(m_coo.row, m_coo.col)),
+        m_coo.data,
+    )
     return "\n".join([("  %s\t%s" % t) for t in triples])

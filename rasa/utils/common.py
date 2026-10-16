@@ -52,7 +52,7 @@ EXPECTED_PILLOW_DEPRECATION_WARNINGS: List[Tuple[Type[Warning], str]] = [
 EXPECTED_WARNINGS: List[Tuple[Type[Warning], str]] = [
     # TODO (issue #9932)
     (
-        np.VisibleDeprecationWarning,
+        np.exceptions.VisibleDeprecationWarning,
         "Creating an ndarray from ragged nested sequences.*",
     ),
     # cf. https://github.com/tensorflow/tensorflow/issues/38168
@@ -82,6 +82,12 @@ EXPECTED_WARNINGS: List[Tuple[Type[Warning], str]] = [
     (
         DeprecationWarning,
         "non-integer arguments to randrange\\(\\) have been deprecated since",
+    ),
+    # jsonpickle 4 warns when encode/decode is called without keys=True.
+    # Passing keys=True would change how non-string dict keys are stored.
+    (
+        DeprecationWarning,
+        "keys will default to True in jsonpickle 5.0.0",
     ),
 ]
 
@@ -150,9 +156,20 @@ def configure_logging_from_file(logging_config_file: Text) -> None:
     """
     logging_config_dict = rasa.shared.utils.io.read_yaml_file(logging_config_file)
 
+    root = logging.getLogger()
+    previous_level = root.level
+    previous_handlers = root.handlers[:]
     try:
         logging.config.dictConfig(logging_config_dict)
     except (ValueError, TypeError, AttributeError, ImportError) as e:
+        # dictConfig drops existing handlers, and may raise the root level,
+        # before it fails. Put the previous setup back so this report is seen.
+        root.setLevel(previous_level)
+        for handler in root.handlers[:]:
+            root.removeHandler(handler)
+        for handler in previous_handlers:
+            if handler not in root.handlers:
+                root.addHandler(handler)
         logging.debug(
             f"The logging config file {logging_config_file} could not "
             f"be applied because it failed validation against "

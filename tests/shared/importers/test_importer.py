@@ -1,3 +1,4 @@
+import warnings
 import os
 from pathlib import Path
 from typing import Text, Dict, Type, List, Any
@@ -318,7 +319,8 @@ def test_subintent_response_matches_with_action(project: Text):
     domain = importer.get_domain()
     # Test retrieval intent response is matched correctly to actions
     # ie. utter_chitchat/faq response compatible with action utter_chitchat
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
         domain.check_missing_responses()
     assert not record
 
@@ -352,7 +354,8 @@ def test_nlu_data_domain_sync_responses(project: Text):
         {}, config_path, domain_path, data_paths
     )
 
-    with pytest.warns(None):
+    with warnings.catch_warnings(record=True):
+        warnings.simplefilter("always")
         domain = importer.get_domain()
 
     # Responses were sync between "test_responses.yml" and the "domain.yml"

@@ -1,3 +1,4 @@
+import warnings
 from pathlib import Path
 import textwrap
 from typing import Text
@@ -74,7 +75,8 @@ async def test_forms_are_converted(domain: Domain):
 
     writer = YAMLStoryWriter()
 
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
         writer.dumps(original_yaml_story_steps)
 
     assert len(record) == 0

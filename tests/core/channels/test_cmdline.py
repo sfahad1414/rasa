@@ -17,12 +17,16 @@ def mock_stdin(input_from_stdin: List[Text]):
     for line in input_from_stdin:
         text += line + ENTER + "\r"
 
-    inp = create_pipe_input()
+    # prompt_toolkit 3.0.29+ returns a context manager instead of the pipe.
+    pipe_context = create_pipe_input()
+    inp = pipe_context.__enter__()
     inp.send_text(text)
 
     prompt_session_init = PromptSession.__init__
 
     def prompt_session_init_fake(self, *k, **kw):
+        kw.pop("input", None)
+        kw.pop("output", None)
         prompt_session_init(self, input=inp, output=DummyOutput(), *k, **kw)
 
     PromptSession.__init__ = prompt_session_init_fake
@@ -36,6 +40,13 @@ def mock_stdin(input_from_stdin: List[Text]):
 
     Application.__init__ = application_init_fake
 
+    original_close = inp.close
+
+    def close() -> None:
+        original_close()
+        pipe_context.__exit__(None, None, None)
+
+    inp.close = close
     return inp
 
 
@@ -89,7 +100,8 @@ async def test_record_messages(monkeypatch: MonkeyPatch, capsys: CaptureFixture)
 
         for output in [m["out"] for m in input_output]:
             if output:
-                mocked.post(url=endpoint, payload=output)
+                # record_messages posts with an empty token query.
+                mocked.post(url=f"{endpoint}?token=", payload=output)
 
         num_of_messages = await record_messages(
             "123",

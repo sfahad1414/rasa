@@ -1,3 +1,4 @@
+import warnings
 from typing import Any, Dict, List
 
 import numpy as np
@@ -352,6 +353,7 @@ def test_warning_incorrect_eval_num_examples(component_config: Dict[Text, Text])
     ],
 )
 def test_no_warning_correct_checkpoint_setting(component_config: Dict[Text, Text]):
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
         train_utils._check_evaluation_setting(component_config)
         assert len(record) == 0

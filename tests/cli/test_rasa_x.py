@@ -16,6 +16,7 @@ from rasa.core.utils import AvailableEndpoints
 import rasa.version
 
 from tests.cli.conftest import RASA_EXE
+import warnings
 
 
 def test_x_help(run: Callable[..., RunResult]):
@@ -171,5 +172,6 @@ def test_rasa_x_does_not_raise_warning_with_production_flag(
 
     args = argparse.Namespace(loglevel=None, log_file=None, production=True)
 
-    with pytest.warns(None):
+    with warnings.catch_warnings(record=True):
+        warnings.simplefilter("always")
         x.rasa_x(args)

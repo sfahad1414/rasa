@@ -1,3 +1,4 @@
+import warnings
 from typing import Text, Dict, Any, Optional, Union
 
 import pytest
@@ -161,7 +162,8 @@ def test_valid_data(default_keyword_intent_classifier: KeywordIntentClassifier):
     rasa_reader = RasaReader()
     data = rasa_reader.read_from_json(json_data)
 
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
         default_keyword_intent_classifier.train(data)
     assert len(record) == 0
 

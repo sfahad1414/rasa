@@ -138,12 +138,45 @@ class FeatureArray(np.ndarray):
             "at": ufunc.at,
             "__call__": ufunc,
         }
-        # convert the inputs to np.ndarray to prevent recursion, call the function,
-        # then cast it back as FeatureArray
-        output = FeatureArray(
-            f[method](*(i.view(np.ndarray) for i in inputs), **kwargs),
-            number_of_dimensions=kwargs["number_of_dimensions"],
+        # Convert ndarray inputs so the ufunc does not recurse into this method.
+        # Scalars and other non-arrays are left unchanged.
+        converted_inputs = tuple(
+            item.view(np.ndarray) if isinstance(item, np.ndarray) else item
+            for item in inputs
         )
+        # number_of_dimensions is a FeatureArray attribute. NumPy never passes it
+        # as a ufunc keyword (NumPy 2 calls this method for comparisons).
+        number_of_dimensions = None
+        for item in (self, *inputs):
+            candidate = getattr(item, "number_of_dimensions", None)
+            if isinstance(candidate, int):
+                number_of_dimensions = candidate
+                break
+        kwargs.pop("number_of_dimensions", None)
+
+        out = kwargs.get("out")
+        if isinstance(out, tuple):
+            kwargs["out"] = tuple(
+                item.view(np.ndarray) if isinstance(item, np.ndarray) else item
+                for item in out
+            )
+        elif isinstance(out, np.ndarray):
+            kwargs["out"] = out.view(np.ndarray)
+
+        result = f[method](*converted_inputs, **kwargs)
+        if (
+            out is not None
+            or number_of_dimensions is None
+            or result is None
+            or not isinstance(result, np.ndarray)
+        ):
+            return result
+
+        try:
+            output = FeatureArray(result, number_of_dimensions=number_of_dimensions)
+        except (ValueError, IndexError, TypeError):
+            # Boolean masks and other results that are not feature tensors.
+            return result
         output.__dict__ = self.__dict__  # carry forward attributes
         return output
 

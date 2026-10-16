@@ -353,6 +353,7 @@ def test_container_derive_messages_from_domain_and_add():
         entities=["e_a", "e_b", "e_c"],
         slots=[TextSlot(name="s", mappings=[{}])],
         forms=forms,
+        loops={},
         data={},
     )
     lookup_table = MessageContainerForCoreFeaturization()
@@ -383,6 +384,7 @@ def test_converter_for_training(input_converter: CoreFeaturizationInputConverter
         responses=dict(),
         action_names=["action_listen", "utter_greet"],
         forms=dict(),
+        loops={},
         data={},
         action_texts=["Hi how are you?"],
     )

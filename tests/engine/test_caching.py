@@ -513,7 +513,11 @@ def test_clean_up_of_cached_result_if_database_fails(
             fingerprint_key, output, output_fingerprint, default_model_storage
         )
 
-    assert list(tmp_path.glob("*")) == [tmp_path / database_name]
+    # SQLAlchemy 2.1 keeps using the connection opened before the file was
+    # deleted, so sqlite does not recreate test.db. Cache artifacts must still
+    # be removed.
+    leftovers = [path for path in tmp_path.iterdir() if path.name != database_name]
+    assert leftovers == []
 
 
 def test_resource_with_model_storage(

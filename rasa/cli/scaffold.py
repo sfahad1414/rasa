@@ -139,9 +139,9 @@ def create_initial_project(path: Text) -> None:
 
 
 def scaffold_path() -> Text:
-    import pkg_resources
+    from rasa.shared.utils.io import package_resource_path
 
-    return pkg_resources.resource_filename(__name__, "initial_project")
+    return package_resource_path(__name__, "initial_project")
 
 
 def print_cancel() -> None:

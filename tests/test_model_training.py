@@ -1,3 +1,4 @@
+import warnings
 import inspect
 import logging
 import secrets
@@ -176,7 +177,8 @@ def test_train_nlu_with_responses_and_domain_no_warns(tmp_path: Path):
     data_path = "data/test_nlu_no_responses/nlu_no_responses.yml"
     domain_path = "data/test_nlu_no_responses/domain_with_only_responses.yml"
 
-    with pytest.warns(None) as records:
+    with warnings.catch_warnings(record=True) as records:
+        warnings.simplefilter("always")
         rasa.model_training.train_nlu(
             "data/test_config/config_response_selector_minimal.yml",
             data_path,

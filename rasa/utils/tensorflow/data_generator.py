@@ -139,8 +139,10 @@ class RasaDataGenerator(Sequence):
             return RasaDataGenerator._pad_4d_dense_data(array_of_dense)
 
         if array_of_dense[0].ndim < 2:
-            # data doesn't contain a sequence
-            return array_of_dense.astype(np.float32)
+            # data doesn't contain a sequence.
+            # np.asarray drops the FeatureArray subclass. TensorFlow refuses to bind
+            # ndarray subclasses into a tf.function list signature.
+            return np.asarray(array_of_dense, dtype=np.float32)
 
         data_size = len(array_of_dense)
         max_seq_len = max([x.shape[0] for x in array_of_dense])

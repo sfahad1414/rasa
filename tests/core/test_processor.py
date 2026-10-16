@@ -1,3 +1,4 @@
+import warnings
 import asyncio
 import datetime
 from http import HTTPStatus
@@ -168,7 +169,8 @@ async def test_default_intent_recognized(
 ):
     message = UserMessage(f"/{default_intent}")
     parsed = await default_processor.parse_message(message)
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
         default_processor._check_for_unseen_features(parsed)
     assert len(record) == 0
 
@@ -1263,6 +1265,7 @@ async def test_logging_of_end_to_end_action(
         responses={},
         action_names=[],
         forms={},
+        loops={},
         action_texts=[end_to_end_action],
         data={},
     )

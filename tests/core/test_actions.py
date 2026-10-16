@@ -1,3 +1,4 @@
+import warnings
 import logging
 import textwrap
 from datetime import datetime
@@ -132,6 +133,7 @@ def test_domain_action_instantiation():
         responses={},
         action_names=["my_module.ActionTest", "utter_test", "utter_chitchat"],
         forms={},
+        loops={},
         data={},
     )
 
@@ -1274,7 +1276,8 @@ async def test_action_extract_slots_predefined_mappings(
     action_extract_slots = ActionExtractSlots(action_endpoint=None)
     tracker = DialogueStateTracker.from_events("sender", evts=[user])
 
-    with pytest.warns(None):
+    with warnings.catch_warnings(record=True):
+        warnings.simplefilter("always")
         events = await action_extract_slots.run(
             CollectingOutputChannel(),
             TemplatedNaturalLanguageGenerator(domain.responses),
@@ -2382,7 +2385,8 @@ async def test_action_extract_slots_with_empty_conditions():
 
     action_extract_slots = ActionExtractSlots(None)
 
-    with pytest.warns(None):
+    with warnings.catch_warnings(record=True):
+        warnings.simplefilter("always")
         events = await action_extract_slots.run(
             CollectingOutputChannel(),
             TemplatedNaturalLanguageGenerator(domain.responses),

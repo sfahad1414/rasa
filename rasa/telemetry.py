@@ -251,15 +251,15 @@ def _fetch_write_key(tool: Text, environment_variable: Text) -> Optional[Text]:
     Returns:
         write key, if a key was present.
     """
-    import pkg_resources
     from rasa import __name__ as name
+    from rasa.shared.utils.io import package_resource_path
 
     if os.environ.get(environment_variable):
         # a write key set using the environment variable will always
         # overwrite any key provided as part of the package (`keys` file)
         return os.environ.get(environment_variable)
 
-    write_key_path = pkg_resources.resource_filename(name, "keys")
+    write_key_path = package_resource_path(name, "keys")
 
     # noinspection PyBroadException
     try:

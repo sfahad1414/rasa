@@ -1,3 +1,4 @@
+import warnings
 import csv
 from typing import List, Optional, Set, Text, Tuple, Type, Any
 import itertools
@@ -568,7 +569,7 @@ def test_domain_validation_with_valid_marker(depth: int, max_branches: int, seed
     slots = [TextSlot(name, []) for name in _collect_parameters(marker, SlotSetMarker)]
     actions = list(_collect_parameters(marker, ActionExecutedMarker))
     intents = _collect_parameters(marker, IntentDetectedMarker)
-    domain = Domain(intents, [], slots, {}, actions, {}, {})
+    domain = Domain(intents, [], slots, {}, actions, {}, {}, {})
 
     assert marker.validate_against_domain(domain)
 
@@ -591,7 +592,8 @@ def test_domain_validation_with_invalid_marker(
     )
 
     domain = Domain.empty()
-    with pytest.warns(None):
+    with warnings.catch_warnings(record=True):
+        warnings.simplefilter("always")
         is_valid = marker.validate_against_domain(domain)
     assert not is_valid
 

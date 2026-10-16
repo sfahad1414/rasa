@@ -133,9 +133,8 @@ nlu:
 
 def test_wrong_format_raises():
 
-    wrong_yaml_nlu_content = """
-    !!
-    """
+    # An unclosed flow is a syntax error. A bare "!!" tag is valid YAML.
+    wrong_yaml_nlu_content = "version: '3.1'\nnlu: [\n"
 
     parser = RasaYAMLReader()
     with pytest.raises(YamlSyntaxException):

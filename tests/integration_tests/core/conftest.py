@@ -34,7 +34,7 @@ def redis_lock_store() -> Iterator[RedisLockStore]:
 @pytest.fixture
 def postgres_login_db_connection() -> Iterator[sa.engine.Connection]:
     engine = sa.create_engine(
-        sa.engine.url.URL(
+        sa.engine.url.URL.create(
             "postgresql",
             host=POSTGRES_HOST,
             port=POSTGRES_PORT,

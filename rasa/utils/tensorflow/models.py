@@ -264,6 +264,12 @@ class RasaModel(Model):
             Prediction output, including diagnostic data.
         """
         self._training = False
+        # The traced signature is a list of tensors. A tuple of ndarrays no longer
+        # binds to that list, and ndarray subclasses such as FeatureArray are rejected.
+        batch_in = [
+            array.view(np.ndarray) if isinstance(array, np.ndarray) else array
+            for array in batch_in
+        ]
         if not self.prepared_for_prediction:
             # in case the model is used for prediction without loading, e.g. directly
             # after training, we need to prepare the model for prediction once

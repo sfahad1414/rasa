@@ -1,12 +1,12 @@
 import argparse
 import asyncio
+import io
 import logging
 from pathlib import Path
 import signal
 from typing import Iterable, List, Optional, Text, Tuple, Union
 
 import aiohttp
-import ruamel.yaml as yaml
 
 from rasa.cli import SubParsersAction
 from rasa.cli.arguments import x as arguments
@@ -100,8 +100,12 @@ def _prepare_credentials_for_rasa_x(
     # this makes sure the Rasa X is properly configured no matter what
     if rasa_x_url:
         credentials["rasa"] = {"url": rasa_x_url}
-    dumped_credentials = yaml.dump(credentials, default_flow_style=False)
-    tmp_credentials = rasa.utils.io.create_temporary_file(dumped_credentials, "yml")
+    # ruamel.yaml 0.19 removed the module-level dump() helper.
+    dumped_credentials = io.StringIO()
+    rasa.shared.utils.io.write_yaml(credentials, dumped_credentials)
+    tmp_credentials = rasa.utils.io.create_temporary_file(
+        dumped_credentials.getvalue(), "yml"
+    )
 
     return tmp_credentials
 

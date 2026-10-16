@@ -59,6 +59,7 @@ def test_process_does_not_do_anything(
         responses={},
         action_names=[],
         forms={},
+        loops={},
         data={},
     )
 

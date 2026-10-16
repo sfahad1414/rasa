@@ -6,7 +6,7 @@ from io import StringIO
 import json
 import os
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 from typing import Any, Dict, List, Optional, Text, Type, Union
 import warnings
@@ -147,6 +147,29 @@ def read_json_file(filename: Union[Text, Path]) -> Any:
         raise FileIOException(
             f"Failed to read json from '{os.path.abspath(filename)}'. Error: {e}"
         )
+
+
+def package_resource_path(package: Text, resource: Text) -> Text:
+    """Return a filesystem path for a resource shipped inside a package.
+
+    setuptools 82+ no longer ships ``pkg_resources``. Unpacked installs already
+    expose the resource as a real path. A missing resource still returns that
+    path so callers can handle absence themselves.
+
+    Args:
+        package: Importable package that contains the resource.
+        resource: Slash-separated path relative to that package.
+
+    Returns:
+        Filesystem path of the resource.
+    """
+    from importlib.resources import files
+
+    # A leading slash is relative to the package. pkg_resources splits on "/"
+    # and joins, so "/visualization.html" stays inside the package directory.
+    parts = [part for part in PurePosixPath(resource).parts if part not in ("/", "")]
+    candidate = files(package).joinpath(*parts)
+    return os.fspath(candidate)
 
 
 def list_directory(path: Text) -> List[Text]:

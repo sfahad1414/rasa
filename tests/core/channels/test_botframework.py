@@ -13,6 +13,7 @@ from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 from jwt.algorithms import RSAAlgorithm
 
 from rasa.core.channels import BotFrameworkInput
+import warnings
 
 DAY_IN_SECONDS = 60 * 60 * 24
 
@@ -69,7 +70,8 @@ def test_successful_jwt_signature_verification(
         headers={"kid": "key_id", "alg": "RS256"},
     )
 
-    with pytest.warns(None):
+    with warnings.catch_warnings(record=True):
+        warnings.simplefilter("always")
         resp = bot_framework_input._validate_auth(f"Bearer {encoded}")
         assert resp is None
 

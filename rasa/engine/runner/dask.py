@@ -4,6 +4,7 @@ import logging
 from typing import Any, Dict, List, Optional, Text
 
 import dask
+from dask.base import DataNode
 
 from rasa.engine.exceptions import GraphRunError
 from rasa.engine.graph import ExecutionContext, GraphNode, GraphNodeHook, GraphSchema
@@ -115,4 +116,8 @@ class DaskGraphRunner(GraphRunner):
                     f"that none of the input names passed to the `run` method are the "
                     f"same as node names in the graph schema."
                 )
-            graph[input_name] = (input_name, input_value)
+            # dask.get walks strings inside plain tuples and treats a string
+            # that matches a key as a dependency. The input is stored as
+            # (name, value), and name is itself the key, so a plain tuple
+            # becomes a self-cycle. DataNode keeps that pair literal.
+            graph[input_name] = DataNode(input_name, (input_name, input_value))

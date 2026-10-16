@@ -1008,8 +1008,6 @@ class DefaultV1Recipe(Recipe):
             The resulting configuration including both the provided and
             the automatically configured keys.
         """
-        import pkg_resources
-
         if keys_to_configure:
             logger.debug(
                 f"The provided configuration does not contain the key(s) "
@@ -1019,7 +1017,9 @@ class DefaultV1Recipe(Recipe):
 
         filename = "config_files/default_config.yml"
 
-        default_config_file = pkg_resources.resource_filename(__name__, filename)
+        default_config_file = rasa.shared.utils.io.package_resource_path(
+            __name__, filename
+        )
         default_config = rasa.shared.utils.io.read_config_file(default_config_file)
 
         config = copy.deepcopy(config)
