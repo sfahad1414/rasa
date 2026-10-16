@@ -1,0 +1,3 @@
+[env]
+# PyO3 must link the same interpreter as the Rasa virtualenv.
+PYO3_PYTHON = { value = "../../.venv/bin/python", relative = true }
